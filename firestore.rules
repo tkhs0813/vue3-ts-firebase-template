@@ -1,0 +1,66 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function notUpdated(key) {
+      return !(key in request.resource.data)
+        || (
+          (key in resource.data)
+          && request.resource.data[key] == resource.data[key]
+        );
+      }
+
+    // document path for creating the feedback
+    match /feedback/{$feedbackId}
+    {
+      allow create: if 
+        request.resource.data.keys().hasAll(['sender', 'message', 'createdAt', "processed"]) &&
+        request.resource.data.keys().hasOnly(
+         ['sender', 'message', 'createdAt', "processed"]);
+    }
+
+    // document path for the newsletter signup
+    match /newsletter/{$signupId}
+    {
+      allow create: if 
+        request.resource.data.keys().hasAll(['subscriber', 'createdAt']) &&
+        request.resource.data.keys().hasOnly(
+         ['subscriber', 'createdAt', "source"]);
+    }
+
+    // document path for the todo example
+    match /todos/{$todoId}
+    {
+      allow read: if 
+        request.auth != null && resource.data.owner == request.auth.uid;
+      allow create: if 
+        request.auth != null && //user must be authenticated
+        request.resource.data.owner == request.auth.uid && // user can only add todos for his account
+        request.resource.data.keys().hasAll(["owner","todo", 'createdAt', "priority", "status"]) &&
+        request.resource.data.keys().hasOnly(
+         ["owner", 'todo', 'createdAt', "priority", "status"]) &&
+        request.resource.data.todo is string &&
+        request.resource.data.todo.size() > 0 &&
+        request.resource.data.todo.size() <= 100 &&
+        request.resource.data.owner is string &&
+        request.resource.data.owner.size() > 0 &&
+        request.resource.data.owner.size() <= 100 &&
+        request.resource.data.priority in ["Low", "Medium","High"] &&
+        request.resource.data.status == "open" &&
+        request.resource.data.createdAt is timestamp;
+      allow update: if 
+        request.auth != null && resource.data.owner == request.auth.uid &&
+        request.resource.data.keys().hasAll(["owner","todo", 'createdAt', "priority", "status"]) &&
+        request.resource.data.keys().hasOnly(
+        ["owner","todo", 'createdAt', "priority", "status"])  &&
+        notUpdated("owner") &&
+        notUpdated("todo") &&
+        notUpdated("priority") &&
+        notUpdated("createdAt");
+      allow delete: if 
+        request.auth != null && resource.data.owner == request.auth.uid;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
