@@ -3,6 +3,8 @@
 
 <template>
   <h2>Home</h2>
+  <router-link to="/">home</router-link>
+  <router-link to="/about">about</router-link>
 </template>
 
 <style>
