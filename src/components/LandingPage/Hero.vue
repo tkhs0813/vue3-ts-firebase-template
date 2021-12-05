@@ -177,7 +177,8 @@ const navigation = ref([
                     style="color: #ffecd2; stroke: #dd914a"
                     class="h-8 w-auto sm:h-10 transform rotate-12 scale-y-110"
                   />
-                  div class="-mr-2">
+                </div>
+                <div class="-mr-2">
                   <PopoverButton
                     class="
                       bg-white
